@@ -182,7 +182,7 @@ static NSImage *gReadOnlyImage;
   // If there was a card, see if it has the email for this calendar account.
   ABMultiValue* emails = [meRecord valueForProperty:kABEmailProperty];
   BOOL containsCalenderEmail = NO;
-  for (int i = 0; i < [emails count]; ++i) {
+  for (NSUInteger i = 0; i < [emails count]; ++i) {
     if ([[emails valueAtIndex:i] isEqualToString:username_]) {
       containsCalenderEmail = YES;
       break;
@@ -563,10 +563,10 @@ static NSImage *gReadOnlyImage;
 
     NSArray *trustedApps = [NSArray arrayWithObjects:(id)myself, (id)iCal, nil];
 
-    SecAccessRef access = NULL;
+    SecAccessRef accessRef = NULL;
     if (SecAccessCreate((CFStringRef)label,(CFArrayRef)trustedApps,
-                        &access) == noErr) {
-      return access;
+                        &accessRef) == noErr) {
+      return accessRef;
     }
   }
 
@@ -599,20 +599,20 @@ static NSImage *gReadOnlyImage;
   SecKeychainAttributeList attributes =
     { (UInt32)(sizeof(attrs) / sizeof(attrs[0])), attrs };
 
-  SecAccessRef access = [self createAccessPathToiCalLabed:itemLabel];
+  SecAccessRef accessRef = [self createAccessPathToiCalLabed:itemLabel];
 
   BOOL succeeded = NO;
-  if (access) {
+  if (accessRef) {
     OSErr err =
       SecKeychainItemCreateFromContent(kSecInternetPasswordItemClass,
                                        &attributes,
                                        (UInt32)strlen(passwdUTF8),
                                        passwdUTF8,
                                        NULL, // use the default keychain
-                                       access,
+                                       accessRef,
                                        NULL);
     succeeded = (err == noErr) || (err == errKCDuplicateItem);
-    CFRelease(access);
+    CFRelease(accessRef);
   }
 
   return succeeded;
