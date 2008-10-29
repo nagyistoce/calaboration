@@ -26,6 +26,7 @@
   IBOutlet NSButton*             loginButton_;
 
   IBOutlet NSWindow*             mainWindow_;
+  IBOutlet NSWindow*             prefsWindow_;
   
   NSString*           username_;
   NSString*           password_;
