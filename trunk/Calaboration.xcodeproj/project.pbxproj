@@ -822,6 +822,7 @@
 			buildSettings = {
 				GCC_PRECOMPILE_PREFIX_HEADER = YES;
 				GCC_PREFIX_HEADER = Calaboration_Prefix.pch;
+				GTM_GENERAL_OTHER_CFLAGS = "-Wdiv-by-zero -Wnested-externs -Wold-style-definition -Wno-sign-compare";
 			};
 			name = Debug;
 		};
@@ -831,6 +832,7 @@
 			buildSettings = {
 				GCC_PRECOMPILE_PREFIX_HEADER = YES;
 				GCC_PREFIX_HEADER = Calaboration_Prefix.pch;
+				GTM_GENERAL_OTHER_CFLAGS = "-Wdiv-by-zero -Wnested-externs -Wold-style-definition -Wno-sign-compare";
 			};
 			name = Release;
 		};
