@@ -21,18 +21,20 @@
 #import "GTMNSString+FindFolder.h"
 #import "GTMNSFileManager+Path.h"
 
+static NSString* const kPrefAllowReadOnlyCalConfigKey = @"AllowReadOnlyCalendarConfig";
+static NSString* const kPrefAllowReadOnlyCalConfigValuesKey = @"values.AllowReadOnlyCalendarConfig";
 
 static NSString* const kICalBundleId = @"com.apple.iCal";
 static NSString* const kAddressBookBundleId = @"com.apple.AddressBook";
 
 // keys in the calendar dictionary
-static NSString *kCalTitle          = @"title";
-static NSString *kCalID             = @"id";
-static NSString *kAlreadyConfigured = @"alreadyConfigured";
-static NSString *kShouldConfigure   = @"shouldConfigure";
-static NSString *kAccessLevel       = @"accessLevel";
-static NSString *kCanConfigure      = @"canConfigure";
-static NSString *kWritable          = @"writable";
+static NSString* const kCalTitle          = @"title";
+static NSString* const kCalID             = @"id";
+static NSString* const kAlreadyConfigured = @"alreadyConfigured";
+static NSString* const kShouldConfigure   = @"shouldConfigure";
+static NSString* const kAccessLevel       = @"accessLevel";
+static NSString* const kCanConfigure      = @"canConfigure";
+static NSString* const kWritable          = @"writable";
 
 // help pages
 static NSString* const kHelpURI = @"http://www.google.com/support/calendar/bin/answer.py?answer=99355";
@@ -74,18 +76,38 @@ static NSImage *gReadOnlyImage;
 
 @implementation ApplicationController
 
++ (void)initialize {
+  if (self == [ApplicationController class]) {
+    NSUserDefaults *defaults = [NSUserDefaults standardUserDefaults];
+    NSDictionary *dict
+      = [NSDictionary dictionaryWithObject:[NSNumber numberWithBool:NO]
+                                    forKey:kPrefAllowReadOnlyCalConfigKey];
+    if (dict) {
+      [defaults registerDefaults:dict];
+    }
+  }
+}
+
 - (id)init {
   self = [super init];
   if (self) {
     cals_ = [[NSMutableArray alloc] init];
 
-    // configure out GData erver
+    // configure our GData server
     contactsService_ = [[GDataServiceGoogleCalendar alloc] init];
     [contactsService_ setServiceShouldFollowNextLinks:YES];
     NSArray *modes =
       [NSArray arrayWithObjects:NSDefaultRunLoopMode, NSModalPanelRunLoopMode,
          nil];  // just in case we ever add modals, we're already setup for it.
     [contactsService_ setRunLoopModes:modes];
+    
+    // register for pref notifications
+    NSUserDefaultsController *defaults = [NSUserDefaultsController sharedUserDefaultsController];
+    [defaults addObserver:self 
+               forKeyPath:kPrefAllowReadOnlyCalConfigValuesKey
+                  options:NSKeyValueObservingOptionNew
+                  context:nil];
+    
     if (!contactsService_) {
       [self release];
       self = nil;
@@ -95,6 +117,10 @@ static NSImage *gReadOnlyImage;
 }
 
 - (void)dealloc {
+  NSUserDefaultsController *defaults = [NSUserDefaultsController sharedUserDefaultsController];
+  [defaults removeObserver:self 
+                forKeyPath:kPrefAllowReadOnlyCalConfigValuesKey];
+
   [username_ release];
   [password_ release];
   [contactsService_ release];
@@ -237,6 +263,8 @@ static NSImage *gReadOnlyImage;
 
 - (void)calendarListFetchTicket:(GDataServiceTicket *)ticket
                finishedWithFeed:(GDataFeedCalendar *)feed {
+  BOOL allowReadOnlyConfig
+    = [[NSUserDefaults standardUserDefaults] boolForKey:kPrefAllowReadOnlyCalConfigKey];
   // build up the list of calendars
   NSMutableArray *ownedCals = [NSMutableArray array];
   NSMutableArray *otherCals = [NSMutableArray array];
@@ -262,13 +290,15 @@ static NSImage *gReadOnlyImage;
       // CalDAV, it just assumes they are all editable.  if you only have R/O
       // access iCal will let you make changes/additions and then it will put up
       // errors when it can't push them back to the CalDAV server and the data
-      // can get out of sync between the local copy and the server.
+      // can get out of sync between the local copy and the server.  so we use
+      // a pref to see if we should allow those to be configured.
       // Also lock down anything already in iCal, since we can't remove calendars.
-      BOOL canConfigure = isWritable && !alreadyConfigured;
+      BOOL canConfigure
+        = (isWritable || allowReadOnlyConfig) && !alreadyConfigured;
       // If it's already configured, it gets checked, otherwise it gets checked
-      // only if it is checked in the gCal ui and we can configure it.
+      // only if it is checked in the gCal ui and you have write access to it.
       BOOL shouldCheck =
-        (alreadyConfigured ? YES : ( canConfigure ? [calendar isSelected] : NO ) );
+        (alreadyConfigured ? YES : ( isWritable ? [calendar isSelected] : NO ) );
       // mutable so the UI can change the kShouldConfigure flag
       NSMutableDictionary *calDict =
         [NSMutableDictionary dictionaryWithObjectsAndKeys:
@@ -550,8 +580,37 @@ static NSImage *gReadOnlyImage;
   [[NSWorkspace sharedWorkspace] openURL:[NSURL URLWithString:kKnownIssuesURI]];
 }
 
-@end
+- (void)observeValueForKeyPath:(NSString *)keyPath 
+                      ofObject:(id)object 
+                        change:(NSDictionary *)change 
+                       context:(void *)context {
+  if ([object isEqualTo:[NSUserDefaultsController sharedUserDefaultsController]]
+      && [keyPath isEqualToString:kPrefAllowReadOnlyCalConfigValuesKey]) {
+    // this must stay in sync w/ -calendarListFetchTicket:finishedWithFeed: for
+    // some of the logic.
+    [self willChangeValueForKey:@"cals_"];
+    // update the the r/o ones
+    BOOL allowReadOnlyConfig
+      = [[NSUserDefaults standardUserDefaults] boolForKey:kPrefAllowReadOnlyCalConfigKey];
+    for (NSMutableDictionary *calDict in cals_) {
+      BOOL isWritable = [[calDict objectForKey:kWritable] boolValue];
+      BOOL alreadyConfigured = [[calDict objectForKey:kAlreadyConfigured] boolValue];
+      if (!isWritable && !alreadyConfigured) {
+        // set the can configure based on the new pref value
+        [calDict setObject:[NSNumber numberWithBool:allowReadOnlyConfig]
+                    forKey:kCanConfigure];
+        if (!allowReadOnlyConfig) {
+          // don't allow readonly config, clear the should configure flags
+          [calDict setObject:[NSNumber numberWithBool:NO]
+                      forKey:kShouldConfigure];
+        }
+      }
+    }
+    [self didChangeValueForKey:@"cals_"];
+  }
+}  
 
+@end
 
 @implementation ApplicationController (KeychainHelpers)
 
