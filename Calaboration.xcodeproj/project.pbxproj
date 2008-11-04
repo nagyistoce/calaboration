@@ -89,6 +89,7 @@
 		F420AEB30E704A2300446523 /* GDataQueryCalendar.m in Sources */ = {isa = PBXBuildFile; fileRef = F420AEAB0E704A2300446523 /* GDataQueryCalendar.m */; };
 		F420AEB40E704A2300446523 /* GDataServiceGoogleCalendar.m in Sources */ = {isa = PBXBuildFile; fileRef = F420AEAD0E704A2300446523 /* GDataServiceGoogleCalendar.m */; };
 		F425CE9F0E7B0E5700B22AB9 /* Calaboration.icns in Resources */ = {isa = PBXBuildFile; fileRef = F425CE9E0E7B0E5700B22AB9 /* Calaboration.icns */; };
+		F42D97F70EC0E5FB00C36C21 /* GDataServerError.m in Sources */ = {isa = PBXBuildFile; fileRef = F42D97F60EC0E5FB00C36C21 /* GDataServerError.m */; };
 		F4A0560A0E815CAB005AACA5 /* GTMNSString+FindFolder.m in Sources */ = {isa = PBXBuildFile; fileRef = F4A056090E815CAB005AACA5 /* GTMNSString+FindFolder.m */; };
 		F4A056290E815DF0005AACA5 /* GTMNSFileManager+Path.m in Sources */ = {isa = PBXBuildFile; fileRef = F4A056280E815DF0005AACA5 /* GTMNSFileManager+Path.m */; };
 /* End PBXBuildFile section */
@@ -275,6 +276,8 @@
 		F420AED10E704B2100446523 /* DebugLeopardOrLater.xcconfig */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = text.xcconfig; name = DebugLeopardOrLater.xcconfig; path = Project/DebugLeopardOrLater.xcconfig; sourceTree = "<group>"; };
 		F420AED20E704B2100446523 /* ReleaseLeopardOrLater.xcconfig */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = text.xcconfig; name = ReleaseLeopardOrLater.xcconfig; path = Project/ReleaseLeopardOrLater.xcconfig; sourceTree = "<group>"; };
 		F425CE9E0E7B0E5700B22AB9 /* Calaboration.icns */ = {isa = PBXFileReference; lastKnownFileType = image.icns; path = Calaboration.icns; sourceTree = "<group>"; };
+		F42D97F50EC0E5FB00C36C21 /* GDataServerError.h */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = sourcecode.c.h; name = GDataServerError.h; path = Networking/GDataServerError.h; sourceTree = "<group>"; };
+		F42D97F60EC0E5FB00C36C21 /* GDataServerError.m */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = sourcecode.c.objc; name = GDataServerError.m; path = Networking/GDataServerError.m; sourceTree = "<group>"; };
 		F4A056080E815CAB005AACA5 /* GTMNSString+FindFolder.h */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = sourcecode.c.h; path = "GTMNSString+FindFolder.h"; sourceTree = "<group>"; };
 		F4A056090E815CAB005AACA5 /* GTMNSString+FindFolder.m */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = sourcecode.c.objc; path = "GTMNSString+FindFolder.m"; sourceTree = "<group>"; };
 		F4A056270E815DF0005AACA5 /* GTMNSFileManager+Path.h */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = sourcecode.c.h; path = "GTMNSFileManager+Path.h"; sourceTree = "<group>"; };
@@ -531,6 +534,8 @@
 				F420AE340E7049FA00446523 /* GDataGatherInputStream.m */,
 				F420AE350E7049FA00446523 /* GDataMIMEDocument.h */,
 				F420AE360E7049FA00446523 /* GDataMIMEDocument.m */,
+				F42D97F50EC0E5FB00C36C21 /* GDataServerError.h */,
+				F42D97F60EC0E5FB00C36C21 /* GDataServerError.m */,
 			);
 			name = Networking;
 			sourceTree = "<group>";
@@ -773,6 +778,7 @@
 				F420AEB40E704A2300446523 /* GDataServiceGoogleCalendar.m in Sources */,
 				F4A0560A0E815CAB005AACA5 /* GTMNSString+FindFolder.m in Sources */,
 				F4A056290E815DF0005AACA5 /* GTMNSFileManager+Path.m in Sources */,
+				F42D97F70EC0E5FB00C36C21 /* GDataServerError.m in Sources */,
 			);
 			runOnlyForDeploymentPostprocessing = 0;
 		};
@@ -822,7 +828,6 @@
 			buildSettings = {
 				GCC_PRECOMPILE_PREFIX_HEADER = YES;
 				GCC_PREFIX_HEADER = Calaboration_Prefix.pch;
-				GTM_GENERAL_OTHER_CFLAGS = "-Wdiv-by-zero -Wnested-externs -Wold-style-definition -Wno-sign-compare";
 			};
 			name = Debug;
 		};
@@ -832,7 +837,6 @@
 			buildSettings = {
 				GCC_PRECOMPILE_PREFIX_HEADER = YES;
 				GCC_PREFIX_HEADER = Calaboration_Prefix.pch;
-				GTM_GENERAL_OTHER_CFLAGS = "-Wdiv-by-zero -Wnested-externs -Wold-style-definition -Wno-sign-compare";
 			};
 			name = Release;
 		};
