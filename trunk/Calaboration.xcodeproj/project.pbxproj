@@ -826,6 +826,10 @@
 			isa = XCBuildConfiguration;
 			baseConfigurationReference = F420AED10E704B2100446523 /* DebugLeopardOrLater.xcconfig */;
 			buildSettings = {
+				"ARCHS[sdk=macosx10.5*]" = (
+					i386,
+					ppc,
+				);
 				GCC_PRECOMPILE_PREFIX_HEADER = YES;
 				GCC_PREFIX_HEADER = Calaboration_Prefix.pch;
 			};
@@ -835,6 +839,10 @@
 			isa = XCBuildConfiguration;
 			baseConfigurationReference = F420AED20E704B2100446523 /* ReleaseLeopardOrLater.xcconfig */;
 			buildSettings = {
+				"ARCHS[sdk=macosx10.5*]" = (
+					i386,
+					ppc,
+				);
 				GCC_PRECOMPILE_PREFIX_HEADER = YES;
 				GCC_PREFIX_HEADER = Calaboration_Prefix.pch;
 			};
