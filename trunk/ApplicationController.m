@@ -616,9 +616,39 @@ static NSImage *gReadOnlyImage;
 
 + (SecAccessRef)createAccessPathToiCalLabed:(NSString *)label {
 
+  // If iCal isn't in its default spot, go find it. (We avoid the find if we can
+  // since LaunchServices sometimes likes to find things on a non-boot drive.)
+  #define kICalPathDefault "/Applications/iCal.app"
+  #define kICalPathDefaultStr @ kICalPathDefault
+  static NSString *iCalPath = nil;
+  if (!iCalPath) {
+    NSFileManager *fm = [NSFileManager defaultManager];
+    if ([fm fileExistsAtPath:kICalPathDefaultStr]) {
+      iCalPath = kICalPathDefaultStr;
+    } else {
+      CFURLRef urlRef = NULL;
+      if (LSFindApplicationForInfo(kLSUnknownCreator,
+                                   CFSTR("com.apple.iCal"),
+                                   NULL, 
+                                   NULL,
+                                   &urlRef) == noErr) {
+        iCalPath = [[(NSURL*)urlRef path] retain];
+        CFRelease(urlRef);
+      }
+    }
+  }
+  
+  const char* iCalCStrPath;
+  if (iCalPath) {
+    iCalCStrPath = [iCalPath UTF8String];
+  }
+  if (!iCalCStrPath) {
+    iCalCStrPath = kICalPathDefault;
+  }
+
   SecTrustedApplicationRef myself, iCal;
   if ((SecTrustedApplicationCreateFromPath(NULL, &myself) == noErr) &&
-      (SecTrustedApplicationCreateFromPath("/Applications/iCal.app", &iCal) == noErr)) {
+      (SecTrustedApplicationCreateFromPath(iCalCStrPath, &iCal) == noErr)) {
 
     NSArray *trustedApps = [NSArray arrayWithObjects:(id)myself, (id)iCal, nil];
 
