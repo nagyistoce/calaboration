@@ -1,0 +1,24 @@
+#summary Frequently Asked Questions
+#labels Featured
+
+=Frequently Asked Questions=
+
+*I set up my calendars in iCal, but now I'm having problems. What now?*
+
+Visit the [http://groups.google.com/group/Google-Calendar-Help Google Calendar Help] group. Once the calendars show up in iCal Calaboration has already done its job. After that, it's not involved at all.
+
+*I already set up CalDAV subscriptions to my Google Calenders in iCal manually. How is Calaboration different?*
+
+It's exactly the same. We just felt that the process was too complicated, especially with more than one calendar, so we created Calaboration to make the process quick and easy.
+
+*How do I remove calenders from iCal once I've added them?*
+
+Open iCal's preferences, go to the Accounts tab, and use the "-" button in the lower-left.
+
+*Why can't I see my iCal calendars in Google Calendar?*
+
+Calaboration isn't a sync tool, it just configures iCal's built-in support for CalDAV calendars. CalDAV lets iCal read and write your Google Calendar calendars directly, but your local iCal calendars are still just local to your machine.
+
+*Why can't I sync these calendars to my iPhone?*
+
+We don't have any control over Apple's sync tools; you'd have to ask them why CalDAV calendars aren't available for sync.
