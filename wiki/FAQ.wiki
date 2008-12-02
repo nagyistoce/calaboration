@@ -1,6 +1,4 @@
-#summary Frequently Asked Questions
 #labels Featured
-
 =Frequently Asked Questions=
 
 *I set up my calendars in iCal, but now I'm having problems. What now?*
