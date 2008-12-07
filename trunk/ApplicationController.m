@@ -475,6 +475,8 @@ static NSImage *gReadOnlyImage;
                                   atomically:YES];
     if (ok && [self setupKeychainFor:unescapedIdent]) {
       return  1;
+    } else {
+      [[NSFileManager defaultManager] removeItemAtPath:davDirPath error:NULL];
     }
   }
 
