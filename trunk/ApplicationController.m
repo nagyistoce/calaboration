@@ -36,6 +36,29 @@ static NSString* const kAccessLevel       = @"accessLevel";
 static NSString* const kCanConfigure      = @"canConfigure";
 static NSString* const kWritable          = @"writable";
 
+// keys and value formats for the .caldav plist file
+static NSString* const kPLHomePathKey = @"CalendarHomePath";
+static NSString* const kPLUserAddressesKey = @"CalendarUserAddresses";
+static NSString* const kPLFullNameKey = @"FullName";
+static NSString* const kPLInboxPathKey = @"InboxPath";
+static NSString* const kPLKeyKey = @"Key";
+static NSString* const kPLLoginKey = @"Login";
+static NSString* const kPLOutboxPathKey = @"OutboxPath";
+static NSString* const kPLPrincipalURLKey = @"PrincipalURL";
+static NSString* const kPLTitleKey = @"Title";
+
+static NSString* const kPLHomePathFormat = @"/calendar/dav/%@/"; // email
+static NSString* const kPLUserAddressesIndex0Format = @"mailto:%@"; // unescaped email
+static NSString* const kPLUserAddressesIndex1Format = @"/calendar/dav/%@/user"; // email
+static NSString* const kPLFullNameFormat = @"%@"; // name
+static NSString* const kPLInboxPathFormat = @"/calendar/dav/%@/inbox/"; // email
+static NSString* const kPLKeyFormat = @"%@"; // UUID
+static NSString* const kPLLoginFormat = @"%@"; // login
+static NSString* const kPLOutboxPathFormat = @"/calendar/dav/%@/outbox/"; // email
+static NSString* const kPLPrincipalURLFormat = @"https://www.google.com/calendar/dav/%@/user"; // email
+static NSString* const kPLTitleFormat = @"Google:%@"; // name
+
+
 // help pages
 static NSString* const kHelpURI = @"http://www.google.com/support/calendar/bin/answer.py?answer=99355";
 static NSString* const kKnownIssuesURI = @"http://www.google.com/support/calendar/bin/answer.py?answer=99360";
@@ -58,6 +81,7 @@ static NSString* const kKnownIssuesURI = @"http://www.google.com/support/calenda
 - (void)validateMeCard;
 - (void)promptForLogin;
 - (NSSet *)calendarIDsAlreadyConfigured;
+- (NSMutableDictionary*)plistTemplate;
 - (BOOL)isICalRunning;
 
 // GData call backs
@@ -376,10 +400,28 @@ static NSImage *gReadOnlyImage;
   [self setAll:NO];
 }
 
+- (NSMutableDictionary*)plistTemplate {
+  NSString *templatePath =
+    [[NSBundle mainBundle] pathForResource:@"template" ofType:@"plist"];
+  NSData* templateData = [NSData dataWithContentsOfFile:templatePath];
+  if (!templateData)
+    return nil;
+  return [NSPropertyListSerialization propertyListFromData:templateData
+                                          mutabilityOption:NSPropertyListMutableContainers
+                                                    format:NULL
+                                          errorDescription:NULL];
+}
+
 - (int)createCalendarAcctNamed:(NSString*)name withID:(NSString*)ident {
   // This shouldn't actually happen, but check just in case.
   if ([[self calendarIDsAlreadyConfigured] containsObject:ident]) {
     return 0;
+  }
+
+  NSMutableDictionary* plist = [self plistTemplate];
+  if (!plist) {
+    NSLog(@"Failed to load CalDAV plist template.");
+    return -1;
   }
 
   uuid_t uuid_binary;
@@ -399,43 +441,37 @@ static NSImage *gReadOnlyImage;
                                                        attributes:nil
                                                             error:NULL];
   if (ok) {
-    NSString *templatePath =
-      [[NSBundle mainBundle] pathForResource:@"template" ofType:@"plist"];
-    NSString *encodedIdent =
+    NSString *unescapedIdent =
       [ident stringByReplacingPercentEscapesUsingEncoding:NSUTF8StringEncoding];
-    NSMutableString *template =
-      [NSMutableString stringWithContentsOfFile:templatePath
-                                       encoding:NSUTF8StringEncoding
-                                          error:NULL];
-    [template replaceOccurrencesOfString:@"{{UUID}}"
-                              withString:uuid
-                                 options:NSLiteralSearch
-                                   range:NSMakeRange(0, [template length])];
-    [template replaceOccurrencesOfString:@"{{NAME}}"
-                              withString:name
-                                 options:NSLiteralSearch
-                                   range:NSMakeRange(0, [template length])];
     
-    [template replaceOccurrencesOfString:@"{{ENCODED_EMAIL}}"
-                              withString:ident
-                                 options:NSLiteralSearch
-                                   range:NSMakeRange(0, [template length])];
+    [plist setObject:[NSString stringWithFormat:kPLHomePathFormat, ident]
+              forKey:kPLHomePathKey];
+    [plist setObject:[NSArray arrayWithObjects:
+                       [NSString stringWithFormat:kPLUserAddressesIndex0Format, unescapedIdent],
+                       [NSString stringWithFormat:kPLUserAddressesIndex1Format, ident],
+                       nil]
+              forKey:kPLUserAddressesKey];
+    [plist setObject:[NSString stringWithFormat:kPLFullNameFormat, name]
+              forKey:kPLFullNameKey];
+    [plist setObject:[NSString stringWithFormat:kPLInboxPathFormat, ident]
+              forKey:kPLInboxPathKey];
+    [plist setObject:[NSString stringWithFormat:kPLKeyFormat, uuid]
+              forKey:kPLKeyKey];
+    [plist setObject:[NSString stringWithFormat:kPLLoginFormat, username_]
+              forKey:kPLLoginKey];
+    [plist setObject:[NSString stringWithFormat:kPLOutboxPathFormat, ident]
+              forKey:kPLOutboxPathKey];
+    [plist setObject:[NSString stringWithFormat:kPLPrincipalURLFormat, ident]
+              forKey:kPLPrincipalURLKey];
+    [plist setObject:[NSString stringWithFormat:kPLTitleFormat, name]
+              forKey:kPLTitleKey];
     
-    [template replaceOccurrencesOfString:@"{{EMAIL}}"
-                              withString:encodedIdent
-                                 options:NSLiteralSearch
-                                   range:NSMakeRange(0, [template length])];
-    
-    [template replaceOccurrencesOfString:@"{{LOGIN}}"
-                              withString:username_
-                                 options:NSLiteralSearch
-                                   range:NSMakeRange(0, [template length])];
-    
-    ok = [template writeToFile:[davDirPath stringByAppendingPathComponent:@"Info.plist"]
-                    atomically:YES
-                      encoding:NSUTF8StringEncoding
-                         error:NULL];
-    if (ok && [self setupKeychainFor:encodedIdent]) {
+    NSData* plistData = [NSPropertyListSerialization dataFromPropertyList:plist
+                                                                   format:NSPropertyListXMLFormat_v1_0
+                                                         errorDescription:NULL];
+    ok = plistData && [plistData writeToFile:[davDirPath stringByAppendingPathComponent:@"Info.plist"]
+                                  atomically:YES];
+    if (ok && [self setupKeychainFor:unescapedIdent]) {
       return  1;
     }
   }
