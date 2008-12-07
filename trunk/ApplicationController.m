@@ -175,6 +175,8 @@ static NSImage *gReadOnlyImage;
                                            errorDescription:NULL];
         if (plist) {
           NSString *calendarHomePath = [plist objectForKey:@"CalendarHomePath"];
+          if (!calendarHomePath)
+            continue;
           NSScanner *scanner = [NSScanner scannerWithString:calendarHomePath];
           NSString *calID;
           if ([scanner scanString:@"/calendar/dav/" intoString:NULL] &&
