@@ -440,10 +440,11 @@ static NSImage *gReadOnlyImage;
                                                       doCreate:NO];
   NSString *davDirPath = [calDirPath stringByAppendingPathComponent:[uuid stringByAppendingString:@".caldav"]];
 
+  NSError* error = nil;
   BOOL ok = [[NSFileManager defaultManager] createDirectoryAtPath:davDirPath
                                       withIntermediateDirectories:YES
                                                        attributes:nil
-                                                            error:NULL];
+                                                            error:&error];
   if (ok) {
     NSString *unescapedIdent =
       [ident stringByReplacingPercentEscapesUsingEncoding:NSUTF8StringEncoding];
@@ -474,12 +475,17 @@ static NSImage *gReadOnlyImage;
                                                                    format:NSPropertyListXMLFormat_v1_0
                                                          errorDescription:NULL];
     ok = plistData && [plistData writeToFile:[davDirPath stringByAppendingPathComponent:@"Info.plist"]
-                                  atomically:YES];
+                                     options:NSAtomicWrite
+                                       error:&error];
     if (ok && [self setupKeychainFor:unescapedIdent]) {
-      return  1;
+      return 1;
     } else {
+      if (!ok) // keychain failure is already logged elsewhere
+        NSLog(@"Failed to write Info.plist for '%@': %@", davDirPath, [error localizedDescription]);
       [[NSFileManager defaultManager] removeItemAtPath:davDirPath error:NULL];
     }
+  } else {
+    NSLog(@"Failed to create directory '%@': %@", davDirPath, [error localizedDescription]);
   }
 
   return -1;
@@ -743,6 +749,8 @@ static NSImage *gReadOnlyImage;
                                        accessRef,
                                        NULL);
     succeeded = (err == noErr) || (err == errKCDuplicateItem);
+    if (!succeeded)
+      NSLog(@"Unable to configure Keychain (try Keychain First Aid in Keychain Access): error %d", err);
     CFRelease(accessRef);
   }
 
