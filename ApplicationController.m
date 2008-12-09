@@ -309,9 +309,10 @@ static NSImage *gReadOnlyImage;
       // is it already configured?
       BOOL alreadyConfigured = [configuredCals containsObject:calID];
       NSString *accessLevel = [[calendar accessLevel] stringValue];
-      BOOL isWritable = [accessLevel isEqualTo:kGDataCalendarAccessOwner] ||
-                        [accessLevel isEqualTo:kGDataCalendarAccessEditor] ||
-                        [accessLevel isEqualTo:kGDataCalendarAccessContributor];
+      BOOL isWritable = [accessLevel isEqualToString:kGDataCalendarAccessOwner] ||
+                        [accessLevel isEqualToString:kGDataCalendarAccessEditor] ||
+                        [accessLevel isEqualToString:kGDataCalendarAccessContributor] ||
+                        [accessLevel isEqualToString:kGDataCalendarAccessRoot];
       // iCal doesn't currently check the permissions on calendars accessed via
       // CalDAV, it just assumes they are all editable.  if you only have R/O
       // access iCal will let you make changes/additions and then it will put up
@@ -336,7 +337,8 @@ static NSImage *gReadOnlyImage;
           [[calendar accessLevel] stringValue], kAccessLevel,
           [[calendar title] stringValue], kCalTitle,
           nil];
-      if ([accessLevel isEqualTo:kGDataCalendarAccessOwner]) {
+      if ([accessLevel isEqualToString:kGDataCalendarAccessOwner] ||
+          [accessLevel isEqualToString:kGDataCalendarAccessRoot]) {
         [ownedCals addObject:calDict];
       } else {
         [otherCals addObject:calDict];
@@ -624,7 +626,7 @@ static NSImage *gReadOnlyImage;
                       ofObject:(id)object 
                         change:(NSDictionary *)change 
                        context:(void *)context {
-  if ([object isEqualTo:[NSUserDefaultsController sharedUserDefaultsController]]
+  if ([object isEqual:[NSUserDefaultsController sharedUserDefaultsController]]
       && [keyPath isEqualToString:kPrefAllowReadOnlyCalConfigValuesKey]) {
     // this must stay in sync w/ -calendarListFetchTicket:finishedWithFeed: for
     // some of the logic.
@@ -779,10 +781,12 @@ static NSImage *gReadOnlyImage;
 
 + (void)initialize {
   // setup some globals for us
-  gReadWriteLevels = [[NSSet alloc] initWithObjects:kGDataCalendarAccessEditor,
-                                                    kGDataCalendarAccessOwner,
-                                                    kGDataCalendarAccessContributor,
-                                                    nil];
+  gReadWriteLevels
+    = [[NSSet alloc] initWithObjects:kGDataCalendarAccessEditor,
+                                     kGDataCalendarAccessOwner,
+                                     kGDataCalendarAccessContributor,
+                                     kGDataCalendarAccessRoot,
+                                     nil];
   gReadOnlyImage = [[NSImage imageNamed:NSImageNameLockLockedTemplate] retain];
 }
 
