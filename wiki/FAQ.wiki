@@ -17,8 +17,6 @@ Calaboration isn't a sync tool, it just configures iCal's built-in support for C
 
 Due to limitations in iCal's CalDAV support of read-only calendars, Calaboration will not allow adding them to iCal by default. To add read-only calendars despite the limitations, you can enable them from Calaboration's preferences.
 
-There is a bug in Calaboration where certain calendars in from hosted domain accounts will show as read-only even though they are not. Until we resolve this in a future version of Calaboration, you can enable them as described above; once they are added to iCal they will work correctly as read-write calendars.
-
 *I already set up CalDAV subscriptions to my Google Calenders in iCal manually. How is Calaboration different?*
 
 It's exactly the same. We just felt that the process was too complicated, especially with more than one calendar, so we created Calaboration to make the process quick and easy.
