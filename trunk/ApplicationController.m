@@ -119,6 +119,9 @@ static NSImage *gReadOnlyImage;
 
     // configure our GData server
     contactsService_ = [[GDataServiceGoogleCalendar alloc] init];
+    NSString *version = [[NSBundle mainBundle] objectForInfoDictionaryKey:@"CFBundleShortVersionString"];
+    NSString *userAgent = [NSString stringWithFormat:@"Google-Calaboration-%@", version];
+    [contactsService_ setUserAgent:userAgent];
     [contactsService_ setServiceShouldFollowNextLinks:YES];
     NSArray *modes =
       [NSArray arrayWithObjects:NSDefaultRunLoopMode, NSModalPanelRunLoopMode,
@@ -297,21 +300,20 @@ static NSImage *gReadOnlyImage;
   NSSet *configuredCals = [self calendarIDsAlreadyConfigured];
   NSArray *entries = [feed entries];
   for (GDataEntryCalendar *calendar in entries) {
-    NSScanner *scanner = [NSScanner scannerWithString:[calendar identifier]];
-    NSString *calID;
     // GData for calendar doesn't vend the IDs in any useful way, so we have to
     // use knowledge of the urls to scan it and get the actual ids off the end.
-    if ([scanner scanString:kGDataGoogleCalendarDefaultAllCalendarsFeed
-                 intoString:NULL] &&
-        [scanner scanString:@"/" intoString:NULL] &&
-        [scanner scanUpToString:@"\n" intoString:&calID] && // use \n to get the rest
-        ([calID length] > 0)) {
+    NSString *calURL = [calendar identifier];
+    NSRange finalSlashRange = [calURL rangeOfString:@"/" options:NSBackwardsSearch];
+    if (finalSlashRange.location == NSNotFound ||
+        (finalSlashRange.location + 1) >= [calURL length])
+      continue;
+    NSString *calID = [calURL substringFromIndex:(finalSlashRange.location + 1)];
+    if ([calID length] > 0) {
       // is it already configured?
       BOOL alreadyConfigured = [configuredCals containsObject:calID];
       NSString *accessLevel = [[calendar accessLevel] stringValue];
       BOOL isWritable = [accessLevel isEqualToString:kGDataCalendarAccessOwner] ||
                         [accessLevel isEqualToString:kGDataCalendarAccessEditor] ||
-                        [accessLevel isEqualToString:kGDataCalendarAccessContributor] ||
                         [accessLevel isEqualToString:kGDataCalendarAccessRoot];
       // iCal doesn't currently check the permissions on calendars accessed via
       // CalDAV, it just assumes they are all editable.  if you only have R/O
@@ -792,7 +794,6 @@ static NSImage *gReadOnlyImage;
   gReadWriteLevels
     = [[NSSet alloc] initWithObjects:kGDataCalendarAccessEditor,
                                      kGDataCalendarAccessOwner,
-                                     kGDataCalendarAccessContributor,
                                      kGDataCalendarAccessRoot,
                                      nil];
   gReadOnlyImage = [[NSImage imageNamed:NSImageNameLockLockedTemplate] retain];
