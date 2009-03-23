@@ -13,6 +13,11 @@ Visit the [http://www.google.com/support/forum/p/Calendar Google Calendar Help] 
 
 Calaboration isn't a sync tool, it just configures iCal's built-in support for CalDAV calendars. CalDAV lets iCal read and write your Google Calendar calendars directly, but your local iCal calendars are still just local to your machine.
 
+If you want to move an existing local calendar to Google Calendar so that you can use it in both iCal and Google Calendar, you can follow these steps:
+ # Import your iCal calendar to Google Calendar ([http://www.google.com/support/calendar/bin/answer.py?answer=83126 instructions])
+ # Use Calaboration to add that new Google Calendar calendar to iCal
+ # Hide or delete your original calendar in iCal so you don't have two copies
+
 *Why are some of my calendars greyed out?*
 
 Due to limitations in iCal's CalDAV support of read-only calendars, Calaboration will not allow adding them to iCal by default. To add read-only calendars despite the limitations, you can enable them from Calaboration's preferences.
